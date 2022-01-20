@@ -1,0 +1,11 @@
+name: '.NET nanoFramework build components installer'
+description: 'Installs the components required to build .NET nanoFramework solutions'
+author: '.NET nanoFramework Contributors'
+branding:
+  icon: git-merge
+  color: purple
+runs:
+  using: 'composite'
+  steps:
+    - run: '& $env:GITHUB_ACTION_PATH/install-nf-build-components.ps1'
+      shell: pwsh

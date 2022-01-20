@@ -1,0 +1,9 @@
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* text=auto
+*.js text
+*.ts text
+
+# Ensure bash shell scripts use LF line endings
+*.sh eol=lf
