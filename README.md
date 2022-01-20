@@ -10,6 +10,14 @@ This action installs .NET **nanoFramework** build components required to build p
 
 It doesn't require any configurations, simply installs the components.
 
+## Example usage
+
+Install .NET **nanoFramework** build components as part of a GitHub Action building a project/solution.
+
+```yaml
+- uses: nanoframework/nanobuild@v1
+```
+
 ## Feedback and documentation
 
 For documentation, providing feedback, issues and finding out how to contribute please refer to the [Home repo](https://github.com/nanoframework/Home).
