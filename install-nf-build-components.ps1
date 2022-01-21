@@ -84,7 +84,7 @@ $vsPath = $(&$vsWherePath -latest -property installationPath)
 
 Write-Host "INFO: Copying build files to msbuild location"
 $msbuildPath = Join-Path -Path $vsPath -ChildPath "\MSBuild"
-Copy-Item -Path "$tempDir\nf-extension\`$MSBuild\nanoFramework" -Destination $tempDir\0_test_output -Recurse
+Copy-Item -Path "$tempDir\nf-extension\`$MSBuild\nanoFramework" -Destination $msbuildPath -Recurse
 
 Write-Host ""
 Write-Host "Installed .NET nanoFramework build components fom extension v$extensionVersion"
