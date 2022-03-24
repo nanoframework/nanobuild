@@ -16,6 +16,8 @@ Install .NET **nanoFramework** build components as part of a GitHub Action build
 
 ```yaml
 - uses: nanoframework/nanobuild@v1
+  with:
+    repo-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Feedback and documentation
