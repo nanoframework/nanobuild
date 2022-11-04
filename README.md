@@ -10,17 +10,12 @@ This action installs .NET **nanoFramework** build components required to build p
 
 It doesn't require any configurations, simply installs the components.
 
->Note: in order to run properly this action requires setting up the GitHub token. There are numerous ways of doing this.
-On the examples below it's being set on the action itself. If that's done elsewhere before the action runs, there is no need to do it again.
-
 ## Example usage
 
 Install .NET **nanoFramework** build components as part of a GitHub Action building a project/solution.
 
 ```yaml
 - uses: nanoframework/nanobuild@v1
-  env:
-    GITHUB_TOKEN: ${{ github.token }}
 ```
 
 ## Feedback and documentation
