@@ -9,3 +9,8 @@ runs:
   steps:
     - run: '& $env:GITHUB_ACTION_PATH/install-nf-build-components.ps1'
       shell: pwsh
+inputs:
+  gitHubAuth:
+    required: false
+    description: 'GitHub Personal Access Token for accessing GitHub API.'
+    default: ''

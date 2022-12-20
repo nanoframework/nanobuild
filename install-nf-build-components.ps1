@@ -21,6 +21,15 @@ $tempDir = $env:RUNNER_TEMP
 $webClient.Headers.Add("User-Agent", "request")
 $webClient.Headers.Add("Accept", "application/vnd.github.v3+json")
 
+if($env:GITHUB_AUTH_TOKEN)
+{
+    Write-Output "INFO: adding authentication header"
+
+    $auth = "basic $([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(":$env:GITHUB_AUTH_TOKEN"))))"
+
+    $webClient.Headers.Add("Authorization", $auth)
+}
+
 $releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')
 
 if($releaseList -match '\"(?<VS2022_version>v2022\.\d+\.\d+\.\d+)\"')

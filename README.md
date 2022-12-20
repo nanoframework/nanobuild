@@ -18,6 +18,16 @@ Install .NET **nanoFramework** build components as part of a GitHub Action build
 - uses: nanoframework/nanobuild@v1
 ```
 
+### Authenticated usage
+
+Request to GitHub API to retrieve the version information can be authenticated by adding the `gitHubAuth` and passing a GitHub Personal Access Token as a environment variable. This can be used for example if there is the need to perform authenticated requests or to keep the API usage rate under control. In this case, it will look like this:
+
+```yaml
+- uses: nanoframework/nanobuild@v1
+  env:
+    GITHUB_AUTH_TOKEN: ${{ secrets.githubAuth }}
+```
+
 ## Feedback and documentation
 
 For documentation, providing feedback, issues and finding out how to contribute please refer to the [Home repo](https://github.com/nanoframework/Home).
