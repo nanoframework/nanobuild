@@ -27,7 +27,7 @@ if($env:GITHUB_AUTH_TOKEN)
     Write-Output "INFO: adding authentication header"
 
     # authorization header with github token
-    $auth = "Bearer $gitHubToken"
+    $auth = "Bearer $env:GITHUB_AUTH_TOKEN"
 
     $webClient.Headers.Add("Authorization", $auth)
 }
