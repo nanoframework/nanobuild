@@ -17,7 +17,7 @@ $tempDir = $env:RUNNER_TEMP
 
 # Get latest releases of nanoFramework VS extension
 [System.Net.WebClient]$webClient = New-Object System.Net.WebClient
-$webClient.Headers.Add("User-Agent", "request")
+$webClient.Headers.Add("User-Agent", "nanobuild")
 $webClient.Headers.Add("Accept", "application/vnd.github+json")
 $webClient.Headers.Add("X-GitHub-Api-Version", "2022-11-28")
 $webClient.Headers.Add("ContentType", "application/json")
