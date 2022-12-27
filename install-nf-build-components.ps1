@@ -4,7 +4,6 @@
 #
 
 [System.Net.WebClient]$webClient = New-Object System.Net.WebClient
-$webClient.UseDefaultCredentials = $true
 
 function DownloadVsixFile($fileUrl, $downloadFileName)
 {
@@ -19,7 +18,8 @@ $tempDir = $env:RUNNER_TEMP
 # Get latest releases of nanoFramework VS extension
 [System.Net.WebClient]$webClient = New-Object System.Net.WebClient
 $webClient.Headers.Add("User-Agent", "request")
-$webClient.Headers.Add("Accept", "application/vnd.github.v3+json")
+$webClient.Headers.Add("Accept", "application/vnd.github+json")
+$webClient.Headers.Add("X-GitHub-Api-Version", "2022-11-28")
 $webClient.Headers.Add("ContentType", "application/json")
 
 if($env:GITHUB_AUTH_TOKEN)
@@ -32,7 +32,38 @@ if($env:GITHUB_AUTH_TOKEN)
     $webClient.Headers.Add("Authorization", $auth)
 }
 
-$releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')
+try 
+{
+    $releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')    
+}
+catch 
+{
+    
+    # assume exception is with try with GITHUB_TOKEN
+    if($env:GITHUB_TOKEN)
+    {
+        Write-Output "INFO: 2nd try using GITHUB TOKEN"
+
+        # authorization header with github token
+        $auth = "Bearer $env:GITHUB_TOKEN"
+
+        $webClient.Headers.Remove("Authorization")
+        $webClient.Headers.Add("Authorization", $auth)
+
+        $releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')
+    }
+    else 
+    {
+        $result = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($result)
+        $reader.BaseStream.Position = 0
+        $reader.DiscardBufferedData()
+        $responseBody = $reader.ReadToEnd()
+		
+        Write-Output "🛑 performing request: $responseBody"
+        exit 1
+    }
+}
 
 if($releaseList -match '\"(?<VS2022_version>v2022\.\d+\.\d+\.\d+)\"')
 {
