@@ -32,21 +32,7 @@ if($env:GITHUB_AUTH_TOKEN)
     $webClient.Headers.Add("Authorization", $auth)
 }
 
-try 
-{
-    $releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')    
-}
-catch 
-{
-    $result = $_.Exception.Response.GetResponseStream()
-    $reader = New-Object System.IO.StreamReader($result)
-    $reader.BaseStream.Position = 0
-    $reader.DiscardBufferedData()
-    $responseBody = $reader.ReadToEnd()
-    
-    Write-Output "🛑 performing request: $responseBody"
-    exit 1
-}
+$releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')    
 
 if($releaseList -match '\"(?<VS2022_version>v2022\.\d+\.\d+\.\d+)\"')
 {
