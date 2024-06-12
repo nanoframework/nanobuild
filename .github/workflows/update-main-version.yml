@@ -1,0 +1,28 @@
+# Copyright (c) .NET Foundation and Contributors
+# See LICENSE file in the project root for full license information.
+
+# This workflow moves the main version tag to the latest commit in the branch.
+# To be manually triggered upon a new release.
+
+name: Update Main Version
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: The tag to move the major version to
+        required: true
+      major_version:
+        type: choice
+        description: The major version to update
+        options:
+          - v1
+
+jobs:
+  update-dependencies:
+    name: nanoFramework
+    uses: nanoframework/nf-tools/.github/workflows/update-main-version.yml@main
+    secrets: inherit
+    with:
+      target: ${{ github.event.inputs.target }}
+      major_version: ${{ github.event.inputs.major_version }}
