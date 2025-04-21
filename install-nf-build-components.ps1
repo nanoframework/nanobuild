@@ -3,66 +3,126 @@
 # See LICENSE file in the project root for full license information.
 #
 
-[System.Net.WebClient]$webClient = New-Object System.Net.WebClient
-
 function DownloadVsixFile($fileUrl, $downloadFileName)
 {
-    # Write-Host "Download VSIX file from $fileUrl to $downloadFileName"
-    $webClient.DownloadFile($fileUrl,$downloadFileName)
+    Write-Debug "Download VSIX file from $fileUrl to $downloadFileName"
+    Invoke-WebRequest -Uri $fileUrl -OutFile $downloadFileName
 }
 
 "INFO: Downloading extension details" | Write-Host
 
+[bool]$isPreview = $env:USE_PREVIEW
 $tempDir = $env:RUNNER_TEMP
-
-# Get latest releases of nanoFramework VS extension
-[System.Net.WebClient]$webClient = New-Object System.Net.WebClient
-$webClient.Headers.Add("User-Agent", "nanobuild")
-$webClient.Headers.Add("Accept", "application/vnd.github+json")
-$webClient.Headers.Add("X-GitHub-Api-Version", "2022-11-28")
-$webClient.Headers.Add("ContentType", "application/json")
-
-if($env:GITHUB_AUTH_TOKEN)
-{
-    Write-Output "INFO: adding authentication header"
-
-    # authorization header with github token
-    $auth = "Bearer $env:GITHUB_AUTH_TOKEN"
-
-    $webClient.Headers.Add("Authorization", $auth)
-}
-
-$releaseList = $webClient.DownloadString('https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=100')    
-
-if($releaseList -match '\"(?<VS2022_version>v2022\.\d+\.\d+\.\d+)\"')
-{
-    $vs2022Tag =  $Matches.VS2022_version
-}
-
-if($releaseList -match '\"(?<VS2019_version>v2019\.\d+\.\d+\.\d+)\"')
-{
-    $vs2019Tag =  $Matches.VS2019_version
-}
 
 # Find which VS version is installed
 $VsWherePath = "${env:PROGRAMFILES(X86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 
+"INFO: VsWherePath is: $VsWherePath"  | Write-Host
+
 $VsInstance = $(&$VSWherePath -latest -property displayName)
 
-Write-Output "INFO: Latest VS is: $VsInstance"
+"INFO: VS is: $VsInstance"  | Write-Host
 
-# Get extension details according to VS version, starting from VS2022 down to VS2019
-if($vsInstance.Contains('2022'))
+# handle preview version
+if($isPreview -eq $true)
 {
-    $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2022Tag/nanoFramework.Tools.VS2022.Extension.vsix"
-    $vsixPath = Join-Path  $tempDir "nanoFramework.Tools.VS2022.Extension.zip"
-    $extensionVersion = $vs2022Tag
+    Write-Host "*** Installing preview version of the extension ***"
+
+    # get extension information from Open VSIX Gallery feed
+    $vsixFeedXml = Join-Path $($tempDir) "vs-extension-feed.xml"
+    Invoke-WebRequest -Uri "https://www.vsixgallery.com/feed/author/nanoframework" -OutFile $vsixFeedXml
+    [xml]$feedDetails = Get-Content $vsixFeedXml
+
+    # Define the extension IDs
+    $vs2019Id = "455f2be5-bb07-451e-b351-a9faf3018dc9"
+    $vs2022Id = "bf694e17-fa5f-4877-9317-6d3664b2689a"
+
+    # feed list VS2019 and VS2022 extensions using the extension ID
+
+    # VS2022
+    if($vsInstance.Contains('2022'))
+    {
+        $vs2022Entry = $feedDetails.feed.entry | Where-Object { $_.Vsix.Id -eq $vs2022Id }
+
+        if($vs2022Entry)
+        {
+            $extensionUrl = $vs2022Entry.content.src
+            $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2022.Extension.zip"
+            $extensionVersion = $vs2022Entry.Vsix.Version
+        }
+        else
+        {
+            Write-Host "ERROR: VS2022 extension with ID $vs2022Id not found."
+        }
+    }
+    elseif($vsInstance.Contains('2019'))
+    {
+        $vs2019Entry = $feedDetails.feed.entry | Where-Object { $_.Vsix.Id -eq $vs2019Id }
+
+        if($vs2019Entry)
+        {
+            $extensionUrl = $vs2019Entry.content.src
+            $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2019.Extension.zip"
+            $extensionVersion = $vs2019Entry.Vsix.Version
+        }
+        else
+        {
+            Write-Host "ERROR: VS2019 extension with ID $vs2019Id not found."
+        }
+    }
 }
-elseif($vsInstance.Contains('2019'))
+else
 {
-    $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2019Tag/nanoFramework.Tools.VS2019.Extension.vsix"
-    $vsixPath = Join-Path  $tempDir "nanoFramework.Tools.VS2019.Extension.zip"
-    $extensionVersion = $vs2019Tag
+    # Build headers for the request
+    $headers = @{
+        "User-Agent"    = "request"
+        "Accept"        = "application/vnd.github.v3+json"
+        "ContentType"   = "application/json"
+    }
+
+    if($gitHubToken)
+    {
+        Write-Host "INFO: Adding authentication header"
+        $headers["Authorization"] = "Bearer $gitHubToken"
+    }
+
+    Write-Host "INFO: Get latest releases of nanoFramework VS extension from GitHub"
+
+    # Use Invoke-WebRequest to get the release JSON
+    $response = Invoke-WebRequest -Uri 'https://api.github.com/repos/nanoframework/nf-Visual-Studio-extension/releases?per_page=10' -Headers $headers
+
+    # Convert the response content to JSON objects
+    $releases = $response.Content | ConvertFrom-Json
+
+    # Filter out draft releases
+    $finalReleases = $releases | Where-Object { -not $_.draft }
+
+    # Extract tags using the tag_name property
+    $vs2022Release = $finalReleases | Where-Object { $_.tag_name -match '^v2022\.\d+\.\d+\.\d+$' } | Select-Object -First 1
+    if($vs2022Release)
+    {
+        $vs2022Tag = $vs2022Release.tag_name
+    }
+
+    $vs2019Release = $finalReleases | Where-Object { $_.tag_name -match '^v2019\.\d+\.\d+\.\d+$' } | Select-Object -First 1
+    if($vs2019Release)
+    {
+        $vs2019Tag = $vs2019Release.tag_name
+    }
+
+    # Get extension details according to VS version, starting from VS2022 down to VS2019
+    if($vsInstance.Contains('2022'))
+    {
+        $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2022Tag/nanoFramework.Tools.VS2022.Extension.vsix"
+        $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2022.Extension.zip"
+        $extensionVersion = $vs2022Tag
+    }
+    elseif($vsInstance.Contains('2019'))
+    {
+        $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2019Tag/nanoFramework.Tools.VS2019.Extension.vsix"
+        $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2019.Extension.zip"
+        $extensionVersion = $vs2019Tag
+    }
 }
 
 # Download VS extension

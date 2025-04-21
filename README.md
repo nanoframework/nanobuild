@@ -28,6 +28,19 @@ Request to GitHub API to retrieve the version information can be authenticated b
     GITHUB_AUTH_TOKEN: ${{ secrets.githubAuth }}
 ```
 
+### Installing preview version
+
+An optional parameter `usePreview` (boolean) set through an environment variable sets the usage of preview version of the VS extension downloaded from the Open VSIX gallery.
+Like this:
+
+```yaml
+- uses: nanoframework/nanobuild@v1
+  env:
+    USE_PREVIEW: true
+```
+
+
+
 ## Feedback and documentation
 
 For documentation, providing feedback, issues and finding out how to contribute please refer to the [Home repo](https://github.com/nanoframework/Home).

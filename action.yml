@@ -14,3 +14,7 @@ inputs:
     required: false
     description: 'GitHub Personal Access Token for accessing GitHub API.'
     default: ''
+  usePreview:
+    required: false
+    description: 'Use preview version of the VS extension downloaded from the Open VSIX gallery'
+    default: false
