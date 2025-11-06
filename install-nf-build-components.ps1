@@ -11,7 +11,7 @@ function DownloadVsixFile($fileUrl, $downloadFileName)
 
 "INFO: Downloading extension details" | Write-Host
 
-[bool]$isPreview = $env:USE_PREVIEW
+[bool]$usePreview = $env:USE_PREVIEW
 $tempDir = $env:RUNNER_TEMP
 $gitHubToken = $env:GITHUB_AUTH_TOKEN
 
@@ -30,7 +30,7 @@ $VsInstance = $(&$VSWherePath -latest -property displayName)
 "INFO: VS is: $VsInstance"  | Write-Host
 
 # handle preview version
-if($isPreview -eq $true)
+if($usePreview -eq $true)
 {
     Write-Host "*** Installing preview version of the extension ***"
 

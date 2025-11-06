@@ -32,13 +32,12 @@ If you already have a personal access token stored in another secret (for exampl
 
 ### Installing preview version
 
-An optional parameter `usePreview` (boolean) set through an environment variable sets the usage of preview version of the VS extension downloaded from the Open VSIX gallery.
-Like this:
+By default the action fetches the latest official release of the Visual Studio extension from the GitHub repository. Set the optional `usePreview` input (boolean) to `true` when you prefer the preview build sourced from the Open VSIX Gallery instead. Example:
 
 ```yaml
 - uses: nanoframework/nanobuild@v1
-  env:
-    USE_PREVIEW: true
+  with:
+    usePreview: true
 ```
 
 

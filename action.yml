@@ -11,8 +11,13 @@ runs:
       shell: pwsh
       env:
         GITHUB_AUTH_TOKEN: ${{ inputs.gitHubAuth }}
+        USE_PREVIEW: ${{ inputs.usePreview }}
 inputs:
   gitHubAuth:
     required: false
     description: 'GitHub Personal Access Token for accessing GitHub API.'
     default: ''
+  usePreview:
+    required: false
+    description: 'Set to true to install preview versions of the components.'
+    default: 'false'
