@@ -13,6 +13,12 @@ function DownloadVsixFile($fileUrl, $downloadFileName)
 
 [bool]$isPreview = $env:USE_PREVIEW
 $tempDir = $env:RUNNER_TEMP
+$gitHubToken = $env:GITHUB_AUTH_TOKEN
+
+if($null -eq $gitHubToken)
+{
+    $gitHubToken = ''
+}
 
 # Find which VS version is installed
 $VsWherePath = "${env:PROGRAMFILES(X86)}\Microsoft Visual Studio\Installer\vswhere.exe"
@@ -80,10 +86,14 @@ else
         "ContentType"   = "application/json"
     }
 
-    if($gitHubToken)
+    if(-not [string]::IsNullOrWhiteSpace($gitHubToken))
     {
         Write-Host "INFO: Adding authentication header"
         $headers["Authorization"] = "Bearer $gitHubToken"
+    }
+    else
+    {
+        Write-Host "INFO: No GitHub auth token provided; continuing without authentication"
     }
 
     Write-Host "INFO: Get latest releases of nanoFramework VS extension from GitHub"
