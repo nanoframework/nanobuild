@@ -11,7 +11,7 @@ function DownloadVsixFile($fileUrl, $downloadFileName)
 
 "INFO: Downloading extension details" | Write-Host
 
-[bool]$usePreview = $env:USE_PREVIEW
+$usePreview = $env:USE_PREVIEW -eq 'true'
 $tempDir = $env:RUNNER_TEMP
 $gitHubToken = $env:GITHUB_AUTH_TOKEN
 
