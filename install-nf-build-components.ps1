@@ -9,6 +9,22 @@ function DownloadVsixFile($fileUrl, $downloadFileName)
     Invoke-WebRequest -Uri $fileUrl -OutFile $downloadFileName
 }
 
+function Get-VSExtensionVersion($vsInstance)
+{
+    # Use the VS2022 extension for VS2022 and any newer release (VS2026 and up),
+    # which it supports. Fall back to VS2019. Returns $null for anything unknown.
+    if($vsInstance -match '20(\d{2})' -and [int]$matches[1] -ge 22)
+    {
+        return '2022'
+    }
+    elseif($vsInstance.Contains('2019'))
+    {
+        return '2019'
+    }
+
+    return $null
+}
+
 "INFO: Downloading extension details" | Write-Host
 
 $usePreview = $env:USE_PREVIEW -eq 'true'
@@ -29,6 +45,10 @@ $VsInstance = $(&$VSWherePath -latest -property displayName)
 
 "INFO: VS is: $VsInstance"  | Write-Host
 
+$vsExtensionVersion = Get-VSExtensionVersion $vsInstance
+
+"INFO: Using VS$vsExtensionVersion extension" | Write-Host
+
 # handle preview version
 if($usePreview -eq $true)
 {
@@ -45,8 +65,7 @@ if($usePreview -eq $true)
 
     # feed list VS2019 and VS2022 extensions using the extension ID
 
-    # VS2022
-    if($vsInstance.Contains('2022'))
+    if($vsExtensionVersion -eq '2022')
     {
         $vs2022Entry = $feedDetails.feed.entry | Where-Object { $_.Vsix.Id -eq $vs2022Id }
 
@@ -61,7 +80,7 @@ if($usePreview -eq $true)
             Write-Host "ERROR: VS2022 extension with ID $vs2022Id not found."
         }
     }
-    elseif($vsInstance.Contains('2019'))
+    elseif($vsExtensionVersion -eq '2019')
     {
         $vs2019Entry = $feedDetails.feed.entry | Where-Object { $_.Vsix.Id -eq $vs2019Id }
 
@@ -120,19 +139,26 @@ else
         $vs2019Tag = $vs2019Release.tag_name
     }
 
-    # Get extension details according to VS version, starting from VS2022 down to VS2019
-    if($vsInstance.Contains('2022'))
+    # Get extension details according to VS version.
+    if($vsExtensionVersion -eq '2022')
     {
         $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2022Tag/nanoFramework.Tools.VS2022.Extension.vsix"
         $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2022.Extension.zip"
         $extensionVersion = $vs2022Tag
     }
-    elseif($vsInstance.Contains('2019'))
+    elseif($vsExtensionVersion -eq '2019')
     {
         $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2019Tag/nanoFramework.Tools.VS2019.Extension.vsix"
         $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2019.Extension.zip"
         $extensionVersion = $vs2019Tag
     }
+}
+
+# Fail clearly if no extension could be resolved (unknown VS version or missing extension)
+if([string]::IsNullOrWhiteSpace($extensionUrl))
+{
+    Write-Host "ERROR: Unable to determine the nanoFramework extension to install for VS version: $vsInstance"
+    exit 1
 }
 
 # Download VS extension
