@@ -45,8 +45,8 @@ if($usePreview -eq $true)
 
     # feed list VS2019 and VS2022 extensions using the extension ID
 
-    # VS2022
-    if($vsInstance.Contains('2022'))
+    # VS2022 (also used for VS2026 and newer, which the VS2022 extension supports)
+    if($vsInstance.Contains('2022') -or $vsInstance.Contains('2026'))
     {
         $vs2022Entry = $feedDetails.feed.entry | Where-Object { $_.Vsix.Id -eq $vs2022Id }
 
@@ -120,8 +120,9 @@ else
         $vs2019Tag = $vs2019Release.tag_name
     }
 
-    # Get extension details according to VS version, starting from VS2022 down to VS2019
-    if($vsInstance.Contains('2022'))
+    # Get extension details according to VS version, starting from VS2022 down to VS2019.
+    # VS2026 and newer use the VS2022 extension, which supports them.
+    if($vsInstance.Contains('2022') -or $vsInstance.Contains('2026'))
     {
         $extensionUrl = "https://github.com/nanoframework/nf-Visual-Studio-extension/releases/download/$vs2022Tag/nanoFramework.Tools.VS2022.Extension.vsix"
         $vsixPath = Join-Path $tempDir "nanoFramework.Tools.VS2022.Extension.zip"
